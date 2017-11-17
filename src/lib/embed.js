@@ -1,4 +1,4 @@
-// uv-1.8.39
+// uv-2.0.2
 
 //https://raw.githubusercontent.com/jfriend00/docReady/master/docready.js
 (function(funcName, baseObj) {
@@ -117,6 +117,7 @@ docReady(function() {
          *  Taken from http://stackoverflow.com/a/6832721/11236
          */
         function compareVersionNumbers(v1, v2){
+
             var v1parts = v1.split('.');
             var v2parts = v2.split('.');
 
@@ -154,8 +155,14 @@ docReady(function() {
             return 0;
         }
 
-        // only load jQuery if not already included in page.
-        if (!(j = window.jQuery) || compareVersionNumbers(version, j.fn.jquery) || callback(j, scriptUri, absScriptUri, loaded)) {
+        function correctVersionOfJqueryAvailable(version) {
+            var comparison = compareVersionNumbers(version, j.fn.jquery);
+            return comparison === -1 || comparison === 0;
+        }
+
+        // load jQuery if not already included in page or
+        // if the version we want (1.10.2) is greater than what's available
+        if (!(j = window.jQuery) || !correctVersionOfJqueryAvailable(version) || callback(j, scriptUri, absScriptUri, loaded)) {
             var script = document.createElement("script");
             script.type = "text/javascript";
             script.src = "//cdnjs.cloudflare.com/ajax/libs/jquery/" + version + "/jquery.min.js";
@@ -207,7 +214,7 @@ docReady(function() {
         }
 
         function app(element, isHomeDomain, isOnlyInstance) {
-            var socket, $app, $img, $appFrame, manifestUri, collectionIndex, manifestIndex, sequenceIndex, canvasIndex, defaultToFullScreen, isLightbox, zoom, rotation, config, jsonp, locale, isFullScreen, dimensions, top, left, lastScroll, reload;
+            var socket, $app, $img, $appFrame, manifestUri, collectionIndex, manifestIndex, sequenceIndex, canvasIndex, defaultToFullScreen, isLightbox, xywh, rotation, config, jsonp, locale, isFullScreen, dimensions, top, left, lastScroll, reload;
 
             $app = $(element);
 
@@ -234,7 +241,7 @@ docReady(function() {
             manifestIndex = $app.attr('data-manifestindex');
             sequenceIndex = $app.attr('data-sequenceindex');
             canvasIndex = $app.attr('data-canvasindex');
-            zoom = $app.attr('data-zoom');
+            xywh = $app.attr('data-xywh');
             rotation = $app.attr('data-rotation');
             config = $app.attr('data-config');
             jsonp = $app.attr('data-jsonp');
@@ -489,7 +496,7 @@ docReady(function() {
                 if (manifestIndex) uri += "&m=" + manifestIndex;
                 if (sequenceIndex) uri += "&s=" + sequenceIndex;
                 if (canvasIndex) uri += "&cv=" + canvasIndex;
-                if (zoom) uri += "&z=" + zoom;
+                if (xywh) uri += "&xywh=" + xywh;
                 if (rotation) uri += "&r=" + rotation;
 
                 socket = new easyXDM.Socket({

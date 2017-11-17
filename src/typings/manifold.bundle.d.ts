@@ -1,7 +1,4 @@
-// manifesto.js v1.0.0 https://github.com/viewdir/manifesto
-declare module exjs {
-    var version: string;
-}
+// manifesto.js v2.0.7 https://github.com/viewdir/manifesto
 declare module exjs {
 }
 declare module exjs {
@@ -173,14 +170,6 @@ declare module exjs {
         zip<TSecond, TResult>(second: IEnumerable<TSecond>, resultSelector: (f: T, s: TSecond) => TResult): IEnumerableEx<TResult>;
         zip<TSecond, TResult>(second: TSecond[], resultSelector: (f: T, s: TSecond) => TResult): IEnumerableEx<TResult>;
     }
-}
-declare var Symbol: any;
-interface Iterator<T> {
-    next(): IteratorResult<T>;
-}
-interface IteratorResult<T> {
-    done: boolean;
-    value: T;
 }
 declare module exjs {
 }
@@ -735,6 +724,7 @@ declare module Manifesto {
         getManifestType(): ManifestType;
         getTrackingLabel(): string;
         isMultiSequence(): boolean;
+        isPagingEnabled(): boolean;
         getViewingDirection(): ViewingDirection;
         getViewingHint(): ViewingHint;
     }
@@ -1137,6 +1127,7 @@ declare module Manifesto {
         getViewingDirection(): Manifesto.ViewingDirection;
         getViewingHint(): ViewingHint;
         isMultiSequence(): boolean;
+        isPagingEnabled(): boolean;
     }
 }
 
@@ -1305,7 +1296,7 @@ declare namespace Manifold {
         constructor(options: Manifold.IManifoldOptions);
         bootstrap(): Promise<Manifold.IHelper>;
         private _loaded(bootstrapper, json, resolve, reject);
-        private _msieversion();
+        private _detectIE();
     }
 }
 
@@ -1316,6 +1307,7 @@ declare namespace Manifold {
         dataUri: string;
         error: any;
         height: number;
+        index: number;
         isResponseHandled: boolean;
         loginService: Manifesto.IService;
         logoutService: Manifesto.IService;
@@ -1603,6 +1595,31 @@ declare namespace Manifold {
         selectAllRanges(selected: boolean): void;
         selectRanges(ranges: IRange[], selected: boolean): void;
         setEnabled(enabled: boolean): void;
+    }
+}
+
+declare namespace Manifold {
+    class SearchResult {
+        canvasIndex: number;
+        rects: SearchResultRect[];
+        constructor(resource: any, canvasIndex: number);
+        addRect(resource: any): void;
+    }
+}
+
+declare namespace Manifold {
+    class SearchResultRect {
+        canvasIndex: number;
+        chars: string;
+        height: number;
+        index: number;
+        isVisible: boolean;
+        viewportX: number;
+        viewportY: number;
+        width: number;
+        x: number;
+        y: number;
+        constructor(result: any);
     }
 }
 
