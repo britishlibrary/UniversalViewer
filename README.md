@@ -6,6 +6,7 @@
 &nbsp;&nbsp;
 <a href="https://universalviewerinvite.herokuapp.com"><img src="https://worldvectorlogo.com/logos/slack.svg" width="60" /></a>
 
+
     npm install universalviewer --save
 
 [Examples](http://universalviewer.io/examples/)
