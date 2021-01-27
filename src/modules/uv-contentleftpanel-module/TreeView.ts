@@ -1,12 +1,12 @@
 import {BaseEvents} from "../uv-shared-module/BaseEvents";
 import {BaseView} from "../uv-shared-module/BaseView";
-import ITreeNode = Manifold.ITreeNode;
+import { TreeNode } from 'manifesto.js';
 
 export class TreeView extends BaseView {
 
     isOpen: boolean = false;
-    treeComponent: IIIFComponents.ITreeComponent;
-    treeData: IIIFComponents.ITreeComponentData;
+    treeComponent: any;
+    treeData: any;
     $tree: JQuery;
 
     constructor($element: JQuery) {
@@ -23,17 +23,20 @@ export class TreeView extends BaseView {
 
     setup(): void {
 
+        const that = this;
+
+        // @ts-ignore
         this.treeComponent = new IIIFComponents.TreeComponent({
-            target: this.$tree[0], 
+            target:  <HTMLElement>this.$tree[0], 
             data: this.treeData
         });
 
-        this.treeComponent.on('treeNodeSelected', function(node: ITreeNode) {
-            $.publish(BaseEvents.TREE_NODE_SELECTED, [node]);
+        this.treeComponent.on('treeNodeSelected', function(node: TreeNode) {
+            that.component.publish(BaseEvents.TREE_NODE_SELECTED, node);
         }, false);
 
-        this.treeComponent.on('treeNodeMultiSelected', function(node: ITreeNode) {
-            $.publish(BaseEvents.TREE_NODE_MULTISELECTED, [node]);
+        this.treeComponent.on('treeNodeMultiSelected', function(node: TreeNode) {
+            that.component.publish(BaseEvents.TREE_NODE_MULTISELECTED, node);
         }, false);
     }
 
@@ -52,15 +55,36 @@ export class TreeView extends BaseView {
         this.$element.hide();
     }
 
-    public selectNode(node: Manifold.ITreeNode): void {
-        this.treeComponent.selectNode(node);
+    public selectNode(node: TreeNode): void {
+
+        if (!this.treeComponent.selectedNode) {
+
+            this.treeComponent.expandParents(node, true);
+
+            const link: Element | undefined = this.$tree.find("#tree-link-" + node.id)[0];
+
+            if (link) {
+                link.scrollIntoViewIfNeeded();
+            }            
+        }
+
+        this.treeComponent.selectNode(node);        
+    }
+
+    public expandNode(node: TreeNode, expanded: boolean): void {
+        this.treeComponent.expandNode(node, expanded);
+    }
+
+
+    public getAllNodes(): TreeNode[] {
+        return this.treeComponent.getAllNodes();
     }
 
     public deselectCurrentNode(): void {
         this.treeComponent.deselectCurrentNode();
     }
 
-    public getNodeById(id: string): ITreeNode {
+    public getNodeById(id: string): TreeNode {
         return this.treeComponent.getNodeById(id);
     }
 

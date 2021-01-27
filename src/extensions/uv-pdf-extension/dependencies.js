@@ -1,7 +1,9 @@
 define(function () {
     return function (formats) {
         return {
-            async: ['!pdfjs-dist/build/pdf.combined', 'iiif-metadata-component']
+            sync: ['pdfobject'],
+            async: ['!pdfjs-dist/build/pdf.combined', 'IIIFMetadataComponent']
         };
     };
 });
+//# sourceMappingURL=dependencies.js.map

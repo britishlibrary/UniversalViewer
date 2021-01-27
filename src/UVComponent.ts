@@ -1,6 +1,10 @@
+import { Annotation, AnnotationBody, Canvas, Sequence } from 'manifesto.js';
+import { Helper, loadManifest } from '@iiif/manifold';
+import { ExternalResourceType, IIIFResourceType, MediaType, RenderingFormat } from '@iiif/vocabulary';
 import {BaseEvents} from "./modules/uv-shared-module/BaseEvents";
 import {Extension as AVExtension} from "./extensions/uv-av-extension/Extension";
 import {Extension as DefaultExtension} from "./extensions/uv-default-extension/Extension";
+import {Extension as EbookExtension} from "./extensions/uv-ebook-extension/Extension";
 import {Extension as MediaElementExtension} from "./extensions/uv-mediaelement-extension/Extension";
 import {Extension as OpenSeadragonExtension} from "./extensions/uv-seadragon-extension/Extension";
 import {Extension as PDFExtension} from "./extensions/uv-pdf-extension/Extension";
@@ -9,16 +13,22 @@ import {IExtension} from "./modules/uv-shared-module/IExtension";
 import {IUVComponent} from "./IUVComponent";
 import {IUVData} from "./IUVData";
 import {IUVDataProvider} from "./IUVDataProvider";
+import {UVUtils} from "./Utils";
+import {PubSub} from "./PubSub";
+import "./Polyfills";
 
 export default class UVComponent extends _Components.BaseComponent implements IUVComponent {
 
     private _extensions: IExtension[];
+    private _pubsub: PubSub;
     public extension: IExtension | null;
     public isFullScreen: boolean = false;
     public URLDataProvider: IUVDataProvider;
 
     constructor(options: _Components.IBaseComponentOptions) {
         super(options);
+
+        this._pubsub = new PubSub();
 
         this._init();
         this._resize();
@@ -34,59 +44,79 @@ export default class UVComponent extends _Components.BaseComponent implements IU
 
         this._extensions = <IExtension[]>{};
 
-        this._extensions[manifesto.ResourceType.canvas().toString()] = {
+        this._extensions[IIIFResourceType.CANVAS.toString()] = {
             type: OpenSeadragonExtension,
             name: 'uv-seadragon-extension'
         };
 
-        this._extensions[manifesto.ResourceType.image().toString()] = {
+        this._extensions[ExternalResourceType.IMAGE.toString()] = {
             type: OpenSeadragonExtension,
             name: 'uv-seadragon-extension'
         };
 
-        this._extensions[manifesto.ResourceType.movingimage().toString()] = {
+        this._extensions[ExternalResourceType.MOVING_IMAGE.toString()] = {
             type: MediaElementExtension,
             name: 'uv-mediaelement-extension'
         };
 
-        this._extensions[manifesto.ResourceType.physicalobject().toString()] = {
+        this._extensions[ExternalResourceType.PHYSICAL_OBJECT.toString()] = {
             type: VirtexExtension,
             name: 'uv-virtex-extension'
         };
 
-        this._extensions[manifesto.ResourceType.sound().toString()] = {
+        this._extensions["Model"] = {
+            type: VirtexExtension,
+            name: 'uv-virtex-extension'
+        };
+
+        this._extensions[ExternalResourceType.SOUND.toString()] = {
             type: MediaElementExtension,
             name: 'uv-mediaelement-extension'
         };
 
-        this._extensions[manifesto.RenderingFormat.pdf().toString()] = {
+        this._extensions[RenderingFormat.PDF.toString()] = {
             type: PDFExtension,
             name: 'uv-pdf-extension'
         };
 
         // presentation 3
 
-        this._extensions[manifesto.MediaType.jpg().toString()] = {
+        this._extensions[MediaType.JPG.toString()] = {
             type: OpenSeadragonExtension,
             name: 'uv-seadragon-extension'
         };
         
-        this._extensions[manifesto.MediaType.pdf().toString()] = {
+        this._extensions[MediaType.PDF.toString()] = {
             type: PDFExtension,
             name: 'uv-pdf-extension'
         };
 
-        this._extensions[manifesto.MediaType.mp4().toString()] = {
+        this._extensions[MediaType.VIDEO_MP4.toString()] = {
             type: AVExtension,
             name: 'uv-av-extension'
         };
 
-        this._extensions[manifesto.MediaType.webm().toString()] = {
+        this._extensions[MediaType.WEBM.toString()] = {
             type: AVExtension,
             name: 'uv-av-extension'
         };
 
-        this._extensions[manifesto.MediaType.threejs().toString()] = {
+        this._extensions[MediaType.THREEJS.toString()] = {
+            type: VirtexExtension,
+            name: 'uv-virtex-extension'
+        };
+
+        this._extensions['model/gltf+json'] = {
+            type: VirtexExtension,
+            name: 'uv-virtex-extension'
+        };
+
+        this._extensions['model/gltf+json'] = {
+            type: VirtexExtension,
+            name: 'uv-virtex-extension'
+        };
+
+        this._extensions['model/gltf-binary'] = {
             type: VirtexExtension,
             name: 'uv-virtex-extension'
         };
@@ -121,6 +151,16 @@ export default class UVComponent extends _Components.BaseComponent implements IU
             name: 'uv-av-extension'
         };
 
+        this._extensions['application/epub+zip'] = {
+            type: EbookExtension,
+            name: 'uv-ebook-extension'
+        };
+
+        this._extensions['application/oebps-package+xml'] = {
+            type: EbookExtension,
+            name: 'uv-ebook-extension'
+        };
+
         this._extensions['default'] = {
             type: DefaultExtension,
             name: 'uv-default-extension'
@@ -133,12 +173,12 @@ export default class UVComponent extends _Components.BaseComponent implements IU
     
     public data(): IUVData {
         return <IUVData>{
-            annotations: null,
+            annotations: undefined,
             root: "./uv",
             canvasIndex: 0,
-            collectionIndex: 0,
-            config: null,
-            configUri: null,
+            collectionIndex: undefined,
+            config: undefined,
+            configUri: undefined,
             embedded: false,
             iiifResourceUri: '',
             isLightbox: false,
@@ -150,7 +190,7 @@ export default class UVComponent extends _Components.BaseComponent implements IU
                 }
             ],
             manifestIndex: 0,
-            rangeId: null,
+            rangeId: undefined,
             rotation: 0,
             sequenceIndex: 0,
             xywh: ''
@@ -177,36 +217,15 @@ export default class UVComponent extends _Components.BaseComponent implements IU
         } else {
 
             // changing any of these data properties forces the UV to reload.
-            if (this._propertiesChanged(data, ['collectionIndex', 'manifestIndex', 'config', 'configUri', 'domain', 'embedDomain', 'embedScriptUri', 'iiifResourceUri', 'isHomeDomain', 'isLightbox', 'isOnlyInstance', 'isReload', 'locales', 'root'])) {
-                $.extend(this.extension.data, data);
+            if (UVUtils.propertiesChanged(data, this.extension.data, ['collectionIndex', 'manifestIndex', 'config', 'configUri', 'domain', 'embedDomain', 'embedScriptUri', 'iiifResourceUri', 'isHomeDomain', 'isLightbox', 'isOnlyInstance', 'isReload', 'locales', 'root'])) {
+                this.extension.data = Object.assign({}, this.extension.data, data);
                 this._reload(this.extension.data);
             } else {
                 // no need to reload, just update.
-                $.extend(this.extension.data, data);
-                this.extension.update();
+                this.extension.data = Object.assign({}, this.extension.data, data);
+                this.extension.render();
             }
         }       
-    }
-
-    private _propertiesChanged(data: IUVData, properties: string[]): boolean {
-        let propChanged: boolean = false;
-        
-        for (var i = 0; i < properties.length; i++) {
-            propChanged = this._propertyChanged(data, properties[i]);
-            if (propChanged) {
-                break;
-            }
-        }
-
-        return propChanged;
-    }
-
-    private _propertyChanged(data: IUVData, propertyName: string): boolean {
-        if (this.extension) {
-            return !!data[propertyName] && this.extension.data[propertyName] !== data[propertyName];
-        }
-
-        return false;
     }
 
     public get(key: string): any {
@@ -215,11 +234,19 @@ export default class UVComponent extends _Components.BaseComponent implements IU
         }
     }
 
+    public publish(event: string, args?: any): void {
+        this._pubsub.publish(event, args);
+    }
+
+    public subscribe(event: string, cb: any): void {
+        this._pubsub.subscribe(event, cb);
+    }
+
     private _reload(data: IUVData): void {
         
-        $.disposePubSub(); // remove any existing event listeners
+        this._pubsub.dispose(); // remove any existing event listeners
 
-        $.subscribe(BaseEvents.RELOAD, (e: any, data?: IUVData) => {
+        this.subscribe(BaseEvents.RELOAD, (data?: IUVData) => {
             this.fire(BaseEvents.RELOAD, data);
         });
 
@@ -235,35 +262,45 @@ export default class UVComponent extends _Components.BaseComponent implements IU
 
         const that = this;
 
-        Manifold.loadManifest(<Manifold.IManifoldOptions>{
-            iiifResourceUri: data.iiifResourceUri,
-            collectionIndex: data.collectionIndex,
-            manifestIndex: data.manifestIndex,
-            sequenceIndex: data.sequenceIndex,
-            canvasIndex: data.canvasIndex,
+        loadManifest({
+            manifestUri: data.iiifResourceUri as string,
+            collectionIndex: data.collectionIndex, // this has to be undefined by default otherwise it's assumed that the first manifest is within a collection
+            manifestIndex: data.manifestIndex || 0,
+            sequenceIndex: data.sequenceIndex || 0,
+            canvasIndex: data.canvasIndex || 0,
             rangeId: data.rangeId,
-            locale: data.locales[0].name
-        }).then((helper: Manifold.IHelper) => {
+            locale: (data.locales) ? data.locales[0].name : undefined
+        }).then((helper) => {
             
-            let trackingLabel: string = helper.getTrackingLabel();
-            trackingLabel += ', URI: ' + (window.location !== window.parent.location) ? document.referrer : document.location;
-            window.trackingLabel = trackingLabel;
-
-            const sequence: Manifesto.ISequence = helper.getSequenceByIndex(data.sequenceIndex);
-
-            if (!sequence) {
-                that._error(`Sequence ${data.sequenceIndex} not found.`);
-                return;
+            let trackingLabel = helper.getTrackingLabel() as string;
+            if (trackingLabel) {
+                trackingLabel += ', URI: ' + (window.location !== window.parent.location) ? document.referrer : document.location;
+                window.trackingLabel = trackingLabel;
             }
 
-            const canvas: Manifesto.ICanvas = helper.getCanvasByIndex(data.canvasIndex);
+            let sequence: Sequence | undefined;
+
+            if (data.sequenceIndex !== undefined) {
+                sequence = helper.getSequenceByIndex(data.sequenceIndex);
+
+                if (!sequence) {
+                    that._error(`Sequence ${data.sequenceIndex} not found.`);
+                    return;
+                }
+            }
+
+            let canvas: Canvas | undefined;
+
+            if (data.canvasIndex !== undefined) {
+                canvas = helper.getCanvasByIndex(data.canvasIndex);
+            }
 
             if (!canvas) {
                 that._error(`Canvas ${data.canvasIndex} not found.`);
                 return;
             }
-
-            let extension: IExtension | null = null;
+            
+            let extension: IExtension | undefined = undefined;
 
             // if the canvas has a duration, use the uv-av-extension
             // const duration: number | null = canvas.getDuration();
@@ -274,28 +311,28 @@ export default class UVComponent extends _Components.BaseComponent implements IU
                 // canvasType will always be "canvas" in IIIF presentation 3.0
                 // to determine the correct extension to use, we need to inspect canvas.content.items[0].format
                 // which is an iana media type: http://www.iana.org/assignments/media-types/media-types.xhtml
-                const content: Manifesto.IAnnotation[] = canvas.getContent();
+                const content: Annotation[] = canvas.getContent();
                 
                 if (content.length) {
-                    const annotation: Manifesto.IAnnotation = content[0];
-                    const body: Manifesto.IAnnotationBody[] = annotation.getBody();
+                    const annotation: Annotation = content[0];
+                    const body: AnnotationBody[] = annotation.getBody();
 
                     if (body && body.length) {
-                        const format: Manifesto.MediaType | null = body[0].getFormat();
+                        const format: MediaType | null = body[0].getFormat();
 
                         if (format) {
                             extension = that._extensions[format.toString()];
 
                             if (!extension) {
                                 // try type
-                                const type: Manifesto.ResourceType | null = body[0].getType();
+                                const type: ExternalResourceType | null = body[0].getType();
                             
                                 if (type) {
                                     extension = that._extensions[type.toString()];
                                 }
                             }
                         } else {
-                            const type: Manifesto.ResourceType | null = body[0].getType();
+                            const type: ExternalResourceType | null = body[0].getType();
 
                             if (type) {
                                 extension = that._extensions[type.toString()];
@@ -304,7 +341,7 @@ export default class UVComponent extends _Components.BaseComponent implements IU
                     }
 
                 } else {
-                    const canvasType: Manifesto.ResourceType | null = canvas.getType();
+                    const canvasType: ExternalResourceType | null = canvas.getType();
 
                     if (canvasType) {
                         // try using canvasType
@@ -348,11 +385,13 @@ export default class UVComponent extends _Components.BaseComponent implements IU
 
         this._getConfigExtension(data, extension, (configExtension: any) => {
 
-            const configPath: string = data.root + '/lib/' + extension.name + '.' + data.locales[0].name + '.config.json';
+            if (data.locales) {
+                const configPath: string = data.root + '/lib/' + extension.name + '.' + data.locales[0].name + '.config.json';
 
-            $.getJSON(configPath, (config) => {
-                this._extendConfig(data, extension, config, configExtension, cb);
-            });
+                $.getJSON(configPath, (config) => {
+                    this._extendConfig(data, extension, config, configExtension, cb);
+                });
+            }
         });
     }
 
@@ -372,8 +411,12 @@ export default class UVComponent extends _Components.BaseComponent implements IU
 
     private _getConfigExtension(data: IUVData, extension: any, cb: (configExtension: any) => void): void {
 
+        if (!data.locales) {
+            return;
+        }
+
         const sessionConfig: string | null = sessionStorage.getItem(extension.name + '.' + data.locales[0].name);
-        const configUri: string | null = data.configUri;
+        const configUri: string | undefined = data.configUri;
 
         if (sessionConfig) { // if config is stored in sessionstorage
             cb(JSON.parse(sessionConfig));
@@ -405,6 +448,11 @@ export default class UVComponent extends _Components.BaseComponent implements IU
     }
 
     private _injectCss(data: IUVData, extension: any, cb: () => void): void {
+
+        if (!data.locales) {
+            return;
+        }
+
         const cssPath: string = data.root + '/themes/' + data.config.options.theme + '/css/' + extension.name + '/theme.css';
         const locale: string = data.locales[0].name;
         const themeName: string = extension.name.toLowerCase() + '-theme-' + locale.toLowerCase();
@@ -418,7 +466,7 @@ export default class UVComponent extends _Components.BaseComponent implements IU
         }
     }
 
-    private _createExtension(extension: any, data: IUVData, helper: Manifold.IHelper): void {
+    private _createExtension(extension: any, data: IUVData, helper: Helper): void {
         this.extension = new extension.type();
         if (this.extension) {
             this.extension.component = this;

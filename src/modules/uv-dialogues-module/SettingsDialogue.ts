@@ -25,11 +25,11 @@ export class SettingsDialogue extends Dialogue {
         this.openCommand = BaseEvents.SHOW_SETTINGS_DIALOGUE;
         this.closeCommand = BaseEvents.HIDE_SETTINGS_DIALOGUE;
 
-        $.subscribe(this.openCommand, () => {
+        this.component.subscribe(this.openCommand, () => {
             this.open();
         });
 
-        $.subscribe(this.closeCommand, () => {
+        this.component.subscribe(this.closeCommand, () => {
             this.close();
         });
 
@@ -72,20 +72,20 @@ export class SettingsDialogue extends Dialogue {
     updateSettings(settings: ISettings): void {
         this.extension.updateSettings(settings);
 
-        $.publish(BaseEvents.UPDATE_SETTINGS, [settings]);
+        this.component.publish(BaseEvents.UPDATE_SETTINGS, settings);
     }
 
     open(): void {
         super.open();
 
-        $.getJSON(this.extension.data.root + "/info.json", (pjson: any) => {
-            this.$version.text("v" + pjson.version);
-        });
+        //$.getJSON(this.extension.data.root + "/info.json", (pjson: any) => {
+            this.$version.text("v3.1.1"); // update this on version
+        //});
     }
 
     private _createLocalesMenu(): void {
 
-        const locales: ILocale[] = this.extension.data.locales;
+        const locales: ILocale[] | undefined = this.extension.data.locales;
 
         if (locales && locales.length > 1) {
             
