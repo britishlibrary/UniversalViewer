@@ -80,6 +80,11 @@
                 "share": "Dela"
             }
         },
+        "pdfFooterPanel": {
+            "content": {
+              "print": "print sv-SV"
+            }
+          },
         "genericDialogue": {
             "content": {
                 "emptyValue": "ange ett värde.",
@@ -90,6 +95,23 @@
                 "refresh": "Uppdatera"
             }
         },
+        "headerPanel": {
+            "content": {
+              "close": "Stäng",
+              "help": "Hjälp"
+            }
+          },
+          "pdfHeaderPanel": {
+            "content": {
+              "emptyValue": "Geben Sie eine Nummer ein",
+              "first": "Första",
+              "go": "Gå",
+              "last": "Sista",
+              "next": "Hjälp",
+              "of": "av {0}",
+              "previous": "Föregående"
+            }
+          },
         "helpDialogue": {
             "content": {
                 "text": "platshållartext",

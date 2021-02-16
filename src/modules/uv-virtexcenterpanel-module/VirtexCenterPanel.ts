@@ -1,5 +1,8 @@
 import {BaseEvents} from "../uv-shared-module/BaseEvents";
 import {CenterPanel} from "../uv-shared-module/CenterPanel";
+import { UVUtils } from "../../Utils";
+import { AnnotationBody, Canvas, IExternalResource } from 'manifesto.js';
+import { MediaType } from '@iiif/vocabulary';
 
 export class VirtexCenterPanel extends CenterPanel {
 
@@ -8,7 +11,6 @@ export class VirtexCenterPanel extends CenterPanel {
     $zoomInButton: JQuery;
     $zoomOutButton: JQuery;
     $vrButton: JQuery;
-    title: string | null;
     viewport: Virtex.Viewport | null;
 
     constructor($element: JQuery) {
@@ -23,7 +25,7 @@ export class VirtexCenterPanel extends CenterPanel {
 
         const that = this;
 
-        $.subscribe(BaseEvents.OPEN_EXTERNAL_RESOURCE, (e: any, resources: Manifesto.IExternalResource[]) => {
+        this.component.subscribe(BaseEvents.OPEN_EXTERNAL_RESOURCE, (resources: IExternalResource[]) => {
             that.openMedia(resources);
         });
 
@@ -83,16 +85,16 @@ export class VirtexCenterPanel extends CenterPanel {
 
     }
 
-    openMedia(resources: Manifesto.IExternalResource[]) {
+    openMedia(resources: IExternalResource[]) {
 
         this.extension.getExternalResources(resources).then(() => {
 
             this.$viewport.empty();
 
             let mediaUri: string | null = null;
-            let canvas: Manifesto.ICanvas = this.extension.helper.getCurrentCanvas();
-            const formats: Manifesto.IAnnotationBody[] | null = this.extension.getMediaFormats(canvas);
-            let resourceType: Manifesto.MediaType | null = null;
+            let canvas: Canvas = this.extension.helper.getCurrentCanvas();
+            const formats: AnnotationBody[] | null = this.extension.getMediaFormats(canvas);
+            let resourceType: MediaType | null = null;
             // default to threejs format.
             let fileType: Virtex.FileType = new Virtex.FileType("application/vnd.threejs+json");
 
@@ -110,23 +112,25 @@ export class VirtexCenterPanel extends CenterPanel {
             const isAndroid: boolean = navigator.userAgent.toLowerCase().indexOf("android") > -1;
 
             this.viewport = new Virtex.Viewport({
-                target: this.$viewport[0],
+                target:  <HTMLElement>this.$viewport[0],
                 data: {
                     antialias: !isAndroid,
-                    file: mediaUri,
+                    file: mediaUri as string,
                     fullscreenEnabled: false,
                     type: fileType,
                     showStats: this.options.showStats
                 }
             });
 
-            this.viewport.on('vravailable', () => {
-                this.$vrButton.show();
-            }, false);
-
-            this.viewport.on('vrunavailable', () => {
-                this.$vrButton.hide();
-            }, false);
+            if (this.viewport) {
+                this.viewport.on('vravailable', () => {
+                    this.$vrButton.show();
+                }, false);
+    
+                this.viewport.on('vrunavailable', () => {
+                    this.$vrButton.hide();
+                }, false);
+            }
 
             this.resize();
         });
@@ -140,7 +144,7 @@ export class VirtexCenterPanel extends CenterPanel {
         super.resize();
 
         if (this.title) {
-            this.$title.ellipsisFill(this.title);
+            this.$title.text(UVUtils.sanitize(this.title));
         }
         
         this.$viewport.width(this.$content.width());

@@ -1,6 +1,7 @@
 import {BaseEvents} from "../uv-shared-module/BaseEvents";
 import {Dialogue} from "../uv-shared-module/Dialogue";
-import {UVUtils} from "../uv-shared-module/Utils";
+import {UVUtils} from "../../Utils";
+import { Service } from 'manifesto.js';
 
 export class AuthDialogue extends Dialogue {
 
@@ -11,7 +12,7 @@ export class AuthDialogue extends Dialogue {
     $confirmButton: JQuery;
     $message: JQuery;
     $title: JQuery;
-    service: Manifesto.IService;
+    service: Service;
 
     constructor($element: JQuery) {
         super($element);
@@ -26,7 +27,7 @@ export class AuthDialogue extends Dialogue {
         this.openCommand = BaseEvents.SHOW_AUTH_DIALOGUE;
         this.closeCommand = BaseEvents.HIDE_AUTH_DIALOGUE;
 
-        $.subscribe(this.openCommand, (s: any, e: any) => {
+        this.component.subscribe(this.openCommand, (e: any) => {
             this.closeCallback = e.closeCallback;
             this.confirmCallback = e.confirmCallback;
             this.cancelCallback = e.cancelCallback;
@@ -34,7 +35,7 @@ export class AuthDialogue extends Dialogue {
             this.open();
         });
 
-        $.subscribe(this.closeCommand, () => {
+        this.component.subscribe(this.closeCommand, () => {
             this.close();
         });
 
@@ -94,7 +95,7 @@ export class AuthDialogue extends Dialogue {
 
             this.$message.find('a').on('click', function() {
                 const url: string = $(this).attr('href');
-                $.publish(BaseEvents.EXTERNAL_LINK_CLICKED, [url]);
+                this.component.publish(BaseEvents.EXTERNAL_LINK_CLICKED, url);
             });
         }
 

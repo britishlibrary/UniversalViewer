@@ -1,4 +1,5 @@
 if (typeof jQuery === "function") {
+    // @ts-ignore
     define('jquery', [], function() {
         return jQuery;
     });
@@ -22,10 +23,42 @@ if (typeof jQuery === "function") {
     return;
 })();
 
-// uv.js
+// @ts-ignore
+define('@iiif/manifold', ['require', '../lib/manifold.js', 'manifold'], (require, m) => {
+    const manifold = require('manifold');
+    // @ts-ignore
+    window.Manifold = manifold;
+    return manifold;
+})
+// @ts-ignore
+define('manifesto.js', ['require', './lib/manifesto.js', 'manifesto'], (require, m) => {
+    const manifesto = require('manifesto');
+    // @ts-ignore
+    window.Manifesto = manifesto;
+    // @ts-ignore
+    window.manifesto = manifesto;
+    return manifesto;
+})
+// @ts-ignore
+define('@iiif/vocabulary', ['require', '../lib/vocabulary.js', 'vocabulary'], (require, m) => {
+    return require('vocabulary');
+})
+
+// @ts-ignore
+define('@iiif/iiif-metadata-component', ['require', '../lib/IIIFMetadataComponent.js', 'IIIFMetadataComponent'], (require, m) => {
+    return require('IIIFMetadataComponent');
+})
+
+// @ts-ignore
+define('@iiif/iiif-gallery-component', ['require', '../lib/GalleryComponent.js'], (require, m) => {
+    return m;
+})
+
+// bundled into dist/uv.js
 // - things in src/lib that are generic to all extensions
 // - bundled data providers
 // - UVComponent
+// @ts-ignore
 requirejs([
     './lib/base64.min.js',
     './lib/browserdetect.js',
@@ -33,17 +66,22 @@ requirejs([
     './lib/jquery.xdomainrequest.js',
     './lib/modernizr.js',
     './lib/ex.es3.min.js',
-    './lib/base-component.js',
-    './lib/key-codes.js',
-    './lib/http-status-codes.js',
+    './lib/BaseComponent.js',
+    './lib/KeyCodes.js',
+    './lib/HTTPStatusCode.js',
     './lib/jquery-plugins.js',
     './lib/ba-tiny-pubsub.js',
-    './lib/manifesto.js',
-    './lib/manifold.js',
-    './lib/utils.js',
+    'manifesto.js',
+    '@iiif/manifold',
+    './lib/Utils.js',
     './lib/xss.min.js',
+    './lib/fetch.umd.js',
     'URLDataProvider',
-    'UVComponent'
+    'UVComponent',
+    // Extra dependencies.
+    '@iiif/iiif-metadata-component',
+    '@iiif/iiif-gallery-component',
+    '@iiif/vocabulary',
 ], (
     base64: any,
     browserdetect: any,
@@ -60,10 +98,11 @@ requirejs([
     manifesto: any,
     manifold: any,
     utils: any,
+    fetch: any,
     URLDataProvider: any,
     UVComponent: any
 ) => {
     window.UV = UVComponent.default;
     window.UV.URLDataProvider = URLDataProvider.default;
-    window.dispatchEvent(new CustomEvent('uvLoaded'));
+    window.dispatchEvent(new CustomEvent('uvLoaded', {}));
 });

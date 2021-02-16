@@ -2,9 +2,10 @@
   "src": ["./src/**/*.ts"],
   "compilerOptions": {
     "module": "amd",
-    "sourceMap": false,
-    "noImplicitAny": true,
+    "sourceMap": true,
+    "noImplicitAny": false,
     "noImplicitReturns": true,
+    "moduleResolution": "node",
     "noImplicitThis": false,
     "noLib": false,
     "lib": ["es6", "dom"],
@@ -13,31 +14,27 @@
     "removeComments": false,
     "strictNullChecks": true,
     "suppressImplicitAnyIndexErrors": true,
+    "skipLibCheck": true,
     "target": "es5",
     "types": [
-      "@iiif/manifold", 
-      "base-component",
-      "exjs",
-      "http-status-codes",
-      "iiif-av-component",
-      "iiif-gallery-component",
-      "iiif-metadata-component",
-      "iiif-tree-component",
+      "@edsilv/exjs",
+      "@edsilv/http-status-codes",
+      "@edsilv/jquery-plugins",
+      "@edsilv/key-codes",
+      "@edsilv/utils",
+      "@iiif/base-component",
+      "@iiif/manifold",
+      "@iiif/vocabulary",
       "jest",
-      "jquery-plugins",
-      "jquery", 
-      "key-codes",
-      "manifesto.js", 
-      "modernizr", 
-      "requirejs", 
+      "jquery",
+      "modernizr",
+      "manifesto.js",
+//      "requirejs",
       "three",
-      "utils",
       "virtex3d"
     ]
   },
-  "files": [
-    "src/Definitions.ts"
-   ],
+
   "exclude": [
     "src/**/*.test.ts",
     "src/**/*.spec.ts"

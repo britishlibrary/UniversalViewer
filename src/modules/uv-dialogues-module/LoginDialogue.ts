@@ -1,6 +1,7 @@
 import {BaseEvents} from "../uv-shared-module/BaseEvents";
 import {Dialogue} from "../uv-shared-module/Dialogue";
 import {ILoginDialogueOptions} from "../uv-shared-module/ILoginDialogueOptions";
+import { IExternalResource } from 'manifesto.js';
 
 export class LoginDialogue extends Dialogue {
 
@@ -12,7 +13,7 @@ export class LoginDialogue extends Dialogue {
     $message: JQuery;
     $title: JQuery;
     options: ILoginDialogueOptions;
-    resource: Manifesto.IExternalResource;
+    resource: IExternalResource;
 
     constructor($element: JQuery) {
         super($element);
@@ -27,7 +28,7 @@ export class LoginDialogue extends Dialogue {
         this.openCommand = BaseEvents.SHOW_LOGIN_DIALOGUE;
         this.closeCommand = BaseEvents.HIDE_LOGIN_DIALOGUE;
 
-        $.subscribe(this.openCommand, (s: any, e: any) => {
+        this.component.subscribe(this.openCommand, (e: any) => {
             this.loginCallback = e.loginCallback;
             this.logoutCallback = e.logoutCallback;
             this.options = e.options;
@@ -35,7 +36,7 @@ export class LoginDialogue extends Dialogue {
             this.open();
         });
 
-        $.subscribe(this.closeCommand, () => {
+        this.component.subscribe(this.closeCommand, () => {
             this.close();
         });
 
@@ -107,7 +108,7 @@ export class LoginDialogue extends Dialogue {
 
         this.$message.find('a').on('click', function() {
             var url: string = $(this).attr('href');
-            $.publish(BaseEvents.EXTERNAL_LINK_CLICKED, [url]);
+            this.component.publish(BaseEvents.EXTERNAL_LINK_CLICKED, url);
         });
 
         if (this.options.showCancelButton){

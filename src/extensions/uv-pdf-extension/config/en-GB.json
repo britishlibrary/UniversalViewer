@@ -11,7 +11,8 @@
     "openTemplate": "http://universalviewer.io?manifest={0}",
     "pessimisticAccessControl": false,
     "rightPanelEnabled": true,
-    "theme": "uv-en-GB-theme"
+    "theme": "uv-en-GB-theme",
+    "usePdfJs": true
   },
   "modules":
   {
@@ -30,7 +31,8 @@
         "feedbackEnabled": false,
         "minimiseButtons": true,
         "openEnabled": false,
-        "shareEnabled": true
+        "shareEnabled": true,
+        "printEnabled": true
       }
     },
     "genericDialogue":

@@ -1,13 +1,12 @@
 #################
-## libs
+## lib folders
 #################
 
 lib
 src/lib/bundle.js
 src/lib/bundle.min.js
-!src/lib
+src/lib/*
 !src/extensions/**/lib
-!dist/**/lib
 
 #################
 ## TypeScript
@@ -49,18 +48,19 @@ node_modules
 *.js
 *.js.map
 *.min.map
-!app.build.js
 !tasks/*.js
 /config.js
+!src/extensions/*/config.js
 !Gruntfile.js
-!gulpfile.js
 !src/lib/*.js
 !src/*/*/lib/*.js
 !src/extensions/*/dependencies.js
-!dist/**/*.js
 !src/helpers.js
 !dev.build.js
 !dist.build.js
+!jest.setup.js
+src/extensions/*/lib/*.js
+!src/extensions/*/lib/*.proxy.js
 
 #################
 ## Build
@@ -73,8 +73,7 @@ src/extensions/*/.build
 ## Dist
 #################
 
-dist/*.tar
-dist/*.zip
+dist
 
 #################
 ## Themes
