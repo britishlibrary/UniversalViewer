@@ -1,5 +1,5 @@
 const $ = require("jquery");
-import { AutoComplete } from "../uv-shared-module/AutoComplete";
+import { PagingAutoComplete } from "../uv-shared-module/PagingAutoComplete";
 import { IIIFEvents } from "../../IIIFEvents";
 import { OpenSeadragonExtensionEvents } from "../../extensions/uv-openseadragon-extension/Events";
 import { HeaderPanel } from "../uv-shared-module/HeaderPanel";
@@ -135,20 +135,25 @@ export class PagingHeaderPanel extends HeaderPanel<
       );
       this.$search.append(this.$autoCompleteBox);
 
-      new AutoComplete(
+      new PagingAutoComplete(
+        //element
         this.$autoCompleteBox,
+
+        //autoCompleteFunc
         (term: string, cb: (results: string[]) => void) => {
           const results: string[] = [];
           const canvases: Canvas[] = this.extension.helper.getCanvases();
+          
 
           // if in page mode, get canvases by label.
           if (this.isPageModeEnabled()) {
+          
             for (let i = 0; i < canvases.length; i++) {
               const canvas: Canvas = canvases[i];
               const label: string | null = LanguageMap.getValue(
                 canvas.getLabel()
               );
-              if (label && label.startsWith(term)) {
+              if (label && label.includes(term)) {
                 results.push(label);
               }
             }
@@ -163,14 +168,27 @@ export class PagingHeaderPanel extends HeaderPanel<
           }
           cb(results);
         },
+
+        //parseResultsFunc
         (results: any) => {
           return results;
         },
+
+        //onSelect
         (terms: string) => {
           this.search(terms);
         },
-        300,
+
+        //delay
         0,
+
+        // minChars
+        0,
+
+        //positionAbove
+        false,
+
+        //allowWords
         Bools.getBool(this.options.autocompleteAllowWords, false)
       );
     } else if (Bools.getBool(this.options.imageSelectionBoxEnabled, true)) {
@@ -418,6 +436,13 @@ export class PagingHeaderPanel extends HeaderPanel<
     if (this.options.modeOptionsEnabled === false) {
       this.$modeOptions.hide();
       this.$centerOptions.addClass("modeOptionsDisabled");
+
+      //JM also hide other parts of the panel otherwise viewable in imageMode
+      this.$searchButton.hide();
+      this.$total.hide();
+
+      //JM and add class to autocomplate input to re-style
+      this.$autoCompleteBox.addClass("pageMode");
     }
 
     // Search is shown as default
@@ -456,6 +481,16 @@ export class PagingHeaderPanel extends HeaderPanel<
     if (!Bools.getBool(this.options.pagingToggleEnabled, true)) {
       this.$pagingToggleButtons.hide();
     }
+
+    $(document).on("click", (e) => {
+      if (
+        !this.$autoCompleteBox.is($(e.target)[0]) &&
+        this.$autoCompleteBox.has($(e.target)[0]).length === 0
+       ) {
+        this.setSearchFieldValue(this.extension.helper.canvasIndex);
+      }
+    })
+
   }
 
   openGallery(): void {
@@ -753,5 +788,8 @@ export class PagingHeaderPanel extends HeaderPanel<
       if (this.pagingToggleIsVisible()) this.$pagingToggleButtons.show();
       if (this.galleryIsVisible()) this.$galleryButton.show();
     }
-  }
+  };
+
+
 }
+

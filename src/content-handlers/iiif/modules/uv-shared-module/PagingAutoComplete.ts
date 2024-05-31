@@ -2,7 +2,8 @@ const $ = require("jquery");
 import * as KeyCodes from "@edsilv/key-codes";
 import { Keyboard } from "@edsilv/utils";
 import { isVisible } from "../../../../Utils";
-export class AutoComplete {
+
+export class PagingAutoComplete {
   private _results: any;
   private _selectedResultIndex: number;
   private _$element: JQuery;
@@ -28,7 +29,7 @@ export class AutoComplete {
     delay: number = 300,
     minChars: number = 2,
     positionAbove: boolean = false,
-    allowWords: boolean = false
+    allowWords: boolean = false,
   ) {
     this._$element = element;
     this._autoCompleteFunc = autoCompleteFunc;
@@ -101,6 +102,8 @@ export class AutoComplete {
       }
 
       if (e.keyCode === KeyCodes.KeyDown.Tab) {
+        that._clearResults();
+        that._hideResults();
         return;
       }
 
@@ -121,10 +124,11 @@ export class AutoComplete {
         // after a delay, show autocomplete list.
         typewatch(() => {
           const val = that._getTerms();
+          that._search(val)
 
           // if there are more than x chars
           // update the autocomplete list.
-          if (val && val.length >= that._minChars && that._searchForWords(val)) {
+          if (val && val.length > that._minChars && that._searchForWords(val)) {
             that._search(val);
           } else {
             // otherwise, hide the autocomplete list.
@@ -135,26 +139,26 @@ export class AutoComplete {
       }
     });
 
-    // hide results if clicked outside.
-    $(document).on("mouseup", (e) => {
+    //empty input if clicked/focussed on (and give all canvase labels as results)
+    this._$element.on("focusin", (e) => {
+        this._$element.val('');
+        this._search('')
+    });
+
+    this._$element.parent().on("blur", (e) => {
+        this._clearResults();
+        this._hideResults();
+    });
+
+    // // hide results if clicked outside.
+    $(document).on("click", (e) => {
       if (this._$searchResultsList.parent().has($(e.target)[0]).length === 0) {
         this._clearResults();
         this._hideResults();
       }
     });
 
-    // hide results if focus moves on.
-    $(document).on("focusin", (e) => {
-      if (
-        this._$searchResultsList.has($(e.target)[0]).length === 0 &&
-        !this._$element.is($(e.target)[0])
-      ) {
-        this._clearResults();
-        this._hideResults();
-      }
-    });
 
-    this._hideResults();
   }
 
   private _searchForWords(search: string): boolean {
@@ -288,4 +292,5 @@ export class AutoComplete {
   private _getSelectedListItem() {
     return this._$searchResultsList.find("li.selected");
   }
+
 }

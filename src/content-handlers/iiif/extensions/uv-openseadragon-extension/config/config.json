@@ -288,13 +288,13 @@
         "autocompleteAllowWords": false,
         "galleryButtonEnabled": true,
         "imageSelectionBoxEnabled": false,
-        "pageModeEnabled": false,
+        "pageModeEnabled": true,
         "pagingToggleEnabled": true,
         "centerOptionsEnabled": true,
         "localeToggleEnabled": false,
         "settingsButtonEnabled": true,
         "helpEnabled": true,
-        "modeOptionsEnabled": true
+        "modeOptionsEnabled": false
       },
       "content": {
         "close": "$close",

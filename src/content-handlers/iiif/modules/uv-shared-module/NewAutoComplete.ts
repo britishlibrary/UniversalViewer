@@ -124,7 +124,7 @@ export class AutoComplete {
 
           // if there are more than x chars
           // update the autocomplete list.
-          if (val && val.length >= that._minChars && that._searchForWords(val)) {
+          if (val && val.length > that._minChars && that._searchForWords(val)) {
             that._search(val);
           } else {
             // otherwise, hide the autocomplete list.
@@ -166,7 +166,12 @@ export class AutoComplete {
   }
 
   private _getTerms(): string {
+    if (this._$element.val()) {
       return this._$element.val().trim();
+    } else {
+      return ""
+    }
+    
   }
 
   private _setSelectedResultIndex(direction: number): void {
